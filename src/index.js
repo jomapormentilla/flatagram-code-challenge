@@ -6,6 +6,7 @@ const likes = document.querySelector('.likes')
 const likeButton = document.querySelector('.like-button')
 const comments = document.querySelector('.comments')
 const commentForm = document.querySelector('.comment-form')
+const downvote = document.querySelector('.downvote')
 
 const loadCard = () => {
     fetch(url + `/images`)
@@ -27,8 +28,31 @@ const loadComments = () => {
             console.log(data)
             comments.innerHTML = ``
             data.map(d => {
-                comments.innerHTML += `<li id="comment-${ d.id }">${ d.content }</li>`
+                comments.innerHTML += `<li id="comment-${ d.id }"><button class='delete-comment'>X</button> ${ d.content }</li>`
             })
+            
+            let newComments = document.querySelectorAll('.delete-comment')
+            for (let comment of newComments) {
+                comment.addEventListener('click', (e)=>{
+                    let id = parseInt(e.target.parentElement.id.split("-")[1], 10)
+            
+                    configObj = {
+                        method: 'DELETE',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accepts': 'application/json'
+                        }
+                    }
+
+                    fetch(url + `/comments/${ id }`, configObj)
+                        .then(res => res.json())
+                        .then(data => {
+                            console.log(data)
+                            loadComments()
+                        })
+                        .catch(err => console.log(err))
+                })
+            }
         })
 }
 
@@ -80,4 +104,22 @@ commentForm.addEventListener("submit", (e)=>{
         })
 
     e.target.comment.value = ``
+})
+
+downvote.addEventListener("click", (e)=>{
+    configObj = {
+        method: 'PATCH',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accepts': 'application/json'
+        },
+        body: JSON.stringify({ likes: parseInt(likes.innerText.split(" ")[0], 10) - 1 })
+    }
+
+    fetch(url + `/images/1`, configObj)
+        .then(res => res.json())
+        .then(data => {
+            console.log(data)
+            loadCard()
+        })
 })
